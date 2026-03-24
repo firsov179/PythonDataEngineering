@@ -28,15 +28,7 @@ services:
 
   airflow-init:
     build: .
-    command: >
-      bash -c "airflow db init &&
-               airflow users create
-               --username airflow
-               --password airflow
-               --firstname Air
-               --lastname Flow
-               --role Admin
-               --email airflow@airflow.com"
+    command: bash -c "airflow db init && airflow users create --username airflow --password airflow --firstname Air --lastname Flow --role Admin --email airflow@airflow.com"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
