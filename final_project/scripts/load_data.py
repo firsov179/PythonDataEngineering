@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -13,6 +14,14 @@ log = logging.getLogger(__name__)
 DB_URL = "postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
 DATA_FOLDER = "/opt/airflow/data/drive-download-20260324T150705Z-1-001"
 
+
+def normalize_phone(phone):
+    if pd.isna(phone):
+        return None
+    digits = re.sub(r'\D', '', str(phone))
+    if len(digits) == 11 and digits[0] in ('7', '8'):
+        digits = '7' + digits[1:]
+    return f"+{digits}"
 
 def get_engine():
     return create_engine(DB_URL)
@@ -44,7 +53,8 @@ def upsert(df, table, engine, conflict_cols):
 
 
 def load_users(df, engine):
-    users = df[['user_id', 'user_phone']].drop_duplicates(subset=['user_id'])
+    users = df[['user_id', 'user_phone']].drop_duplicates(subset=['user_id']).copy()
+    users['user_phone'] = users['user_phone'].apply(normalize_phone)
     upsert(users, 'users', engine, 'user_id')
 
 
@@ -54,7 +64,8 @@ def load_stores(df, engine):
 
 
 def load_drivers(df, engine):
-    drivers = df[['driver_id', 'driver_phone']].drop_duplicates(subset=['driver_id'])
+    drivers = df[['driver_id', 'driver_phone']].drop_duplicates(subset=['driver_id']).copy()
+    drivers['driver_phone'] = drivers['driver_phone'].apply(normalize_phone)
     upsert(drivers, 'drivers', engine, 'driver_id')
 
 

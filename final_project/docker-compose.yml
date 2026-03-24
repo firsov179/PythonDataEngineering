@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   postgres:
@@ -61,8 +59,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
 
   airflow-scheduler:
     build: .
@@ -76,9 +74,8 @@ services:
       - ./scripts:/opt/airflow/scripts
       - ./data:/opt/airflow/data
     depends_on:
-      postgres:
-        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
-
