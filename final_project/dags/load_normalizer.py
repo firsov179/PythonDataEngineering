@@ -13,15 +13,23 @@ from load_data import (
     load_orders, load_order_drivers, load_order_items
 )
 
+from build_marts_sql import (
+    build_order_mart, build_item_mart
+)
+
 default_args = {
     'start_date': datetime(2024, 1, 1),
     'retries': 1
 }
 
-
-def task_load_references():
-    engine = get_engine()
+def task_read_data(**kwargs):
     df = read_data()
+    kwargs['ti'].xcom_push(key='dataframe', value=df)
+    return df
+
+def task_load_references(**kwargs):
+    engine = get_engine()
+    df = kwargs['ti'].xcom_pull(key='dataframe', task_ids='read_data')
     load_users(df, engine)
     load_stores(df, engine)
     load_drivers(df, engine)
@@ -29,22 +37,28 @@ def task_load_references():
     load_addresses(df, engine)
 
 
-def task_load_orders():
+def task_load_orders(**kwargs):
     engine = get_engine()
-    df = read_data()
+    df = kwargs['ti'].xcom_pull(key='dataframe', task_ids='read_data')
     load_orders(df, engine)
 
 
-def task_load_order_drivers():
+def task_load_order_drivers(**kwargs):
     engine = get_engine()
-    df = read_data()
+    df = kwargs['ti'].xcom_pull(key='dataframe', task_ids='read_data')
     load_order_drivers(df, engine)
 
 
-def task_load_order_items():
+def task_load_order_items(**kwargs):
     engine = get_engine()
-    df = read_data()
+    df = kwargs['ti'].xcom_pull(key='dataframe', task_ids='read_data')
     load_order_items(df, engine)
+
+def task_build_order_mart():
+    build_order_mart()
+
+def task_build_item_mart():
+    build_item_mart()
 
 
 with DAG(
@@ -53,6 +67,11 @@ with DAG(
     schedule_interval='@once',
     catchup=False
 ) as dag:
+
+    read_data_task = PythonOperator(
+        task_id='read_data',
+        python_callable=task_read_data
+    )
 
     t1 = PythonOperator(
         task_id='load_references',
@@ -74,4 +93,14 @@ with DAG(
         python_callable=task_load_order_items
     )
 
-    t1 >> t2 >> [t3, t4]
+    t5 = PythonOperator(
+        task_id='build_order_mart',
+        python_callable=task_build_order_mart
+    )
+
+    t6 = PythonOperator(
+        task_id='build_item_mart',
+        python_callable=task_build_item_mart
+    )
+
+    read_data_task >> t1 >> t2 >> t3 >> t4 >> t5 >> t6
