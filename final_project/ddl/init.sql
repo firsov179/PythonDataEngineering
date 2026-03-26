@@ -60,8 +60,48 @@ CREATE TABLE IF NOT EXISTS order_items (
     UNIQUE (order_id, item_id)
 );
 
+CREATE TABLE IF NOT EXISTS dm_orders (
+    order_id BIGINT PRIMARY KEY,
+    user_id BIGINT,
+    store_id BIGINT,
+    address_text TEXT,
+    order_date DATE,
+    year INTEGER,
+    month INTEGER,
+    day INTEGER,
+    turnover NUMERIC,
+    revenue NUMERIC,
+    profit NUMERIC,
+    is_delivered BOOLEAN,
+    is_canceled BOOLEAN,
+    cancel_after_delivery BOOLEAN,
+    cancel_service_fault BOOLEAN,
+    has_driver_change BOOLEAN,
+    final_driver_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS dm_items (
+    id SERIAL PRIMARY KEY,
+    order_id BIGINT,
+    user_id BIGINT,
+    store_id BIGINT,
+    item_id BIGINT,
+    item_title TEXT,
+    item_category TEXT,
+    order_date DATE,
+    year INTEGER,
+    month INTEGER,
+    day INTEGER,
+    item_quantity INTEGER,
+    item_canceled_quantity INTEGER,
+    item_turnover NUMERIC,
+    has_canceled BOOLEAN
+);
+
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_store_id ON orders(store_id);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_drivers_order_id ON order_drivers(order_id);
+CREATE INDEX IF NOT EXISTS idx_dm_orders_order_date ON dm_orders(order_date);
+CREATE INDEX IF NOT EXISTS idx_dm_items_order_date ON dm_items(order_date);
