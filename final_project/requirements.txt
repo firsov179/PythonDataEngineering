@@ -1,0 +1,6 @@
+SQLAlchemy==1.4.50
+apache-airflow-providers-postgres==5.9.0
+numpy==1.24.4
+pandas==2.1.4
+pyarrow==11.0.0
+psycopg2-binary==2.9.9
